@@ -19,8 +19,8 @@ while True:
     humidity  = bme280_data.humidity
     pressure  = bme280_data.pressure
     ambient_temperature = bme280_data.temperature
-    fafhrenheite = 9.0/5.0 * ambient_temperature + 32
-    string = f'{humidity},\t{fafhrenheite},\t{pressure}'
+    faf = 9.0/5.0 * ambient_temperature + 32
+    string = '{0},\t{1},\t{2}\n'.format(faf,humidity,pressure)
     print(string + '             ', end = '\r')
     with open(fname, 'a') as file:
         file.write(string)
