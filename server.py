@@ -5,6 +5,7 @@ from flask import url_for
 import bme280
 import smbus2
 from time import sleep
+import RPi.GPIO as GPIO
 
 app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
