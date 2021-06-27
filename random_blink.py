@@ -13,7 +13,7 @@ GPIO.setwarnings(False)
 GPIO.setup(18,GPIO.OUT)
 
 def led_condition(f):
-    if round(f*10000)%7 == 0:
+    if round((f%.1)*1111000)%7 == 0:
         return True
     return False
 
