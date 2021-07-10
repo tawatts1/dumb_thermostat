@@ -16,14 +16,17 @@ def write_and_print(error, error_file):
                     str(error) +               \
                     '\n')
     print(error)
-    
+
 def in_intervals(val, intervals):
+    '''
+    returns True if time value is inside a list of 2 intervals
+    '''
     for interval in intervals:
         if (val < interval[1] and val >= interval[0]) or \
         (interval[1]<interval[0] and (val < interval[1] or val >= interval[0])):
             return True
     return False
-    
+
 class thermostat():
     def __init__(self, config_file, current_mode, error_file = "errors.txt"):
         self.error_file = error_file
@@ -42,7 +45,7 @@ class thermostat():
         self.settings = settings
         #except Exception as error:
         #   write_and_print(error, error_file)
-            
+
     def l1_switching(self, current_temp_f):
         '''
         l1 can be overridden by l2 and l3
@@ -52,9 +55,9 @@ class thermostat():
 
         Returns
         -------
-        1 if element should turn on if not on. 
+        1 if element should turn on if not on.
         0 if element should stay in current state
-        -1 if element should turn off if it is on. 
+        -1 if element should turn off if it is on.
         '''
         now = datetime.now().strftime("%H:%M")
         dic = self.settings[self.mode]
@@ -80,26 +83,18 @@ class thermostat():
             out = 0
         return out
     def l2_switching(self, minutes_on):
-        
-        
-        
-        
-        
-        
-        
-        
-            
-            
-            
-            
+
+
+
+
+
+
+
+
+
+
+
+
 x = thermostat("thermostat.config", "cool")
 for t in [75,75.5,7,76.5,77,77.5,78,78.5,79,79.5,80,80.5]:
     print(t, x.l1_switching(t))
-
-
-
-
-
-
-
-
