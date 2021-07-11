@@ -46,6 +46,9 @@ class thermostat():
         #except Exception as error:
         #   write_and_print(error, error_file)
 
+    def get_optimal_temp():
+
+
     def l1_switching(self, current_temp_f):
         '''
         l1 can be overridden by l2 and l3
@@ -60,7 +63,7 @@ class thermostat():
         -1 if element should turn off if it is on.
         '''
         now = datetime.now().strftime("%H:%M")
-        dic = self.settings[self.mode]
+        mode_settings = self.settings[self.mode]
         times = list(dic.keys())
         times.sort()
         #print(times)
@@ -83,6 +86,64 @@ class thermostat():
             out = 0
         return out
     def l2_switching(self, minutes_on):
+        pass
+
+    def get_optimal_temp():
+        now = datetime.now().strftime("%H:%M")
+        times = list(dic.keys())
+        times.sort()
+        pass
+
+    def get_heating_buffer():
+        pass
+
+    def can_heat():
+        pass
+
+    def get_cooling_buffer():
+        pass
+
+    def can_cool():
+        pass
+
+    def evaluate(current_temp_f):
+        """
+        function that should be called with thermostat.evaluate(f) which
+        determines if the AC should be turned on or off.
+
+        Returns
+        -------
+        1 if element should turn on if not on.
+        0 if element should stay in current state
+        -1 if element should turn off if it is on.
+        """
+        optimal_temp = get_optimal_temp()
+
+        temp_differential = optimal_temp - current_temp_f
+
+        if temp_differential > 0 and self.mode == 'heating': # too cold and mode is on heating
+            heating_buffer = self.get_heating_buffer()
+            if temp_differential > heating_buffer and self.can_heat():
+                return 1 # turn on
+            elif self.can_heat():
+                return 0 # keep heating
+            else:
+                return -1
+        elif self.mode == 'heating':
+            return -1
+
+        if temp_differential < 0 and self.mode == 'cooling': # too cold and mode is on cooling
+            cooling_buffer = self.get_cooling_buffer()
+            if temp_differential > cooling_buffer and self.can_cool():
+                return 1 # turn on
+            elif self.can_cool():
+                return 0 # keep cooling
+            else:
+                return -1
+        elif self.mode == 'cooling':
+                return -1
+
+
 
 
 
