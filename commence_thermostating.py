@@ -39,7 +39,7 @@ while True:
     current_state = 'off'# on/off
     minutes_in_state = 0 #
 
-    therm = thermostat("thermostat.config", mode)
+    therm = thermostat.thermostat("thermostat.config", mode)
     code = therm.l2_switching(current_temp_f, current_state, minutes_in_state)
     print(code)
     with open('logs.txt', a) as file:
