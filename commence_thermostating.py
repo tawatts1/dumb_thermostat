@@ -4,6 +4,7 @@ from time import sleep
 import RPi.GPIO as GPIO
 import thermostat
 
+
 port = 1
 address = 0x77 # Adafruit BME280 address. Other BME280s may be different
 bus = smbus2.SMBus(port)
@@ -42,6 +43,6 @@ while True:
     code = therm.l2_switching(current_temp_f, current_state, minutes_in_state)
     print(code)
     with open('logs.txt', 'a') as file:
-        file.write('Humidity: {0}, Temperature: {1}, Pressure: {2}, Code: {3}'.format(humidity, fafhrenheite, pressure, code))
+        file.write('{4}  Humidity: {0}, Temperature: {1}, Pressure: {2}, Code: {3}'.format(humidity, fafhrenheite, pressure, code, therm.time_now()))
         file.write('\n')
     sleep(4)
