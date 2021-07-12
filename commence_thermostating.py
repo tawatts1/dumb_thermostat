@@ -26,16 +26,14 @@ while True:
     ambient_temperature = bme280_data.temperature
     fafhrenheite = 9.0/5.0 * ambient_temperature + 32
     print('Humidity: {0}, Temperature: {1}, Pressure: {2}'.format(humidity, fafhrenheite, pressure))
-    if led_condition(fafhrenheite):
-        GPIO.setup(18,GPIO.OUT)
-        print("LED on")
-        GPIO.output(18,GPIO.HIGH)
-    else:
-        print("LED off")
-        GPIO.output(18,GPIO.LOW)
+    GPIO.setup(18,GPIO.OUT)
+    print("LED on")
+    GPIO.output(18,GPIO.HIGH)
+    print("LED off")
+    GPIO.output(18,GPIO.LOW)
 
     mode = 'cool'
-    current_temp_f = ambient_temperature #
+    current_temp_f = fafhrenheite #
     current_state = 'off'# on/off
     minutes_in_state = 0 #
 
