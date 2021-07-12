@@ -42,7 +42,7 @@ while True:
     therm = thermostat.thermostat("thermostat.config", mode)
     code = therm.l2_switching(current_temp_f, current_state, minutes_in_state)
     print(code)
-    with open('logs.txt', a) as file:
+    with open('logs.txt', 'a') as file:
         file.write('Humidity: {0}, Temperature: {1}, Pressure: {2}, Code: {3}'.format(humidity, fafhrenheite, pressure, code))
         file.write('\n')
     sleep(5)
