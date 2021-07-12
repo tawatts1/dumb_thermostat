@@ -78,11 +78,11 @@ class thermostat():
         0 if element should stay in current state
         -1 if element should turn off if it is on.
         '''
-        
+
         target_temp = self.get_target_temp()
         sign = {"cool":1,"heat":-1}[self.mode]
         diff = sign*(current_temp_f-target_temp)
-        
+
         if diff > self.settings["threshhold"]:
             out = 1
         elif diff < -self.settings["threshhold"]:
@@ -90,8 +90,8 @@ class thermostat():
         else:
             out = 0
         return out
-    
-    
+
+
     def l2_switching(self, current_temp_f, state, minutes_in_state):
         # if it has run to long, turn it off no matter what
         # if it has only been off for a short time minutes, keep it off
@@ -102,42 +102,37 @@ class thermostat():
                 return 0 # keep it on
         elif state=='off' and minutes_in_state < self.settings["min_off"]:
             return 0 # keep it off so it can rest
-        
+
         out = self.l2_switching(current_temp_f)
         if out == 1 and state == 'on':
             out = 0 # No need to send a 1
         elif out == -1 and state == 'off':
             out = 0
         return out
-        
-        
-        
-        
-        
-        
-        
-        
-            
-            
-            
-def test1():            
+
+
+
+
+
+
+
+
+
+
+
+def test1():
     x = thermostat("thermostat.config", "cool")
     for t in [75,75.5,7,76.5,77,77.5,78,78.5,79,79.5,80,80.5]:
         print(t, x.l1_switching(t))
 
 if __name__ == "__main__":
     mode = sys.argv[1]
-    current_temp_f = sys.argv[2] # 
+    current_temp_f = sys.argv[2] #
     current_state = sys.argv[3]# on/off
-    minutes_in_state = sys.argv[4] # 
-    
+    minutes_in_state = sys.argv[4] #
+
     therm = thermostat("thermostat.config", mode)
     print(therm.l2_switching(current_temp_f, current_state, minutes_in_state))
-
-
-
-
-
 
 
 
