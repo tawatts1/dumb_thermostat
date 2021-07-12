@@ -2,7 +2,7 @@ import bme280
 import smbus2
 from time import sleep
 import RPi.GPIO as GPIO
-import thermostat.py
+import thermostat
 
 port = 1
 address = 0x77 # Adafruit BME280 address. Other BME280s may be different
@@ -34,10 +34,10 @@ while True:
         print("LED off")
         GPIO.output(18,GPIO.LOW)
 
-    mode = sys.argv[1]
-    current_temp_f = sys.argv[2] #
-    current_state = sys.argv[3]# on/off
-    minutes_in_state = sys.argv[4] #
+    mode = 'cool'
+    current_temp_f = ambient_temperature #
+    current_state = 'off'# on/off
+    minutes_in_state = 0 #
 
     therm = thermostat("thermostat.config", mode)
     code = therm.l2_switching(current_temp_f, current_state, minutes_in_state)
