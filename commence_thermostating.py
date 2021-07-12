@@ -29,6 +29,7 @@ while True:
     GPIO.setup(18,GPIO.OUT)
     print("LED on")
     GPIO.output(18,GPIO.HIGH)
+    sleep(1)
     print("LED off")
     GPIO.output(18,GPIO.LOW)
 
@@ -43,4 +44,4 @@ while True:
     with open('logs.txt', 'a') as file:
         file.write('Humidity: {0}, Temperature: {1}, Pressure: {2}, Code: {3}'.format(humidity, fafhrenheite, pressure, code))
         file.write('\n')
-    sleep(5)
+    sleep(4)
