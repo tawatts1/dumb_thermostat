@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import sys
 from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
 from time import sleep
+import RPi.GPIO as GPIO
 
 
 def write_and_print(error, error_file):
@@ -52,6 +53,7 @@ class thermostat():
                 time_str = self.float_to_time(key)
                 settings[mode][time_str] = settings[mode].pop(key)
         self.settings = settings
+        self.initialize_bme()
         self.initialize_switches(testing=test_mode)
         self.stable_temp = self.get_temp_press_hum()[0]
         self.state = "off"
@@ -62,6 +64,7 @@ class thermostat():
     def initialize_switches(self, testing = False):
         for switch in ["gpio_fan", "gpio_compressor"]:
             pin_num = self.settings[switch]
+            GPIO.setup(pin_num, GPIO.OUT)
             if testing:
                 gpio_on(pin_num)
                 sleep(1)
@@ -151,7 +154,7 @@ class thermostat():
         elif state == 'off' and minutes_in_state < self.settings["min_off"]:
             return 0  # keep it off so it can rest
 
-        out = self.l2_switching(current_temp_f)
+        out = self.get_switching_signal(current_temp_f)
         if out == 1 and state == 'on':
             out = 0  # No need to send a 1
         elif out == -1 and state == 'off':

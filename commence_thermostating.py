@@ -15,7 +15,7 @@ def get_date_and_weekday():
     
 #initial conditions: 
 mode = 'cool'
-therm = thermostat("thermostat.config", mode)
+therm = thermostat("thermostat.config", mode, test_mode = True)
 
 try:
     while True:
@@ -31,7 +31,7 @@ try:
         stable_temp, temp, hum, press, state, switch_signal = therm.check_temp_and_switch()        
 
         with open('logs.txt', 'a') as file:
-            line = '{0}, {1}, {2:.3f}, {2:.3f}, {3:.3f}, {4:.3f}, {5}, {6}\n'.format(
+            line = '{0}, {1}, {2:.3f}, {2:.3f}, {3:.3f}, {4:.3f}, {5}, {6}, {7}\n'.format(
                 weekday, time, stable_temp, temp, hum, press, state, switch_signal)
             file.write(line)
         #sleep(4)
