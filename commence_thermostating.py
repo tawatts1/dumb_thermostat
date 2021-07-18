@@ -1,51 +1,41 @@
-import bme280
-import smbus2
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from time import sleep
+from datetime import datetime
 import RPi.GPIO as GPIO
-import thermostat
+from thermostat import thermostat, write_and_print
+import gpio_utils 
+from numpy.random import normal
 
+def get_date_and_weekday():
+    ''' returns list of date string and day of week string:
+        ['21-07-12 22:20', 'Monday']'''
+    return datetime.now().strftime('%y-%m-%d %H:%M:%Sbutt%A').split('butt')
+    
+#initial conditions: 
+mode = 'cool'
+therm = thermostat("thermostat.config", mode)
 
-port = 1
-address = 0x77  # Adafruit BME280 address. Other BME280s may be different
-bus = smbus2.SMBus(port)
+try:
+    while True:
+        sleep(abs(normal(10,3)))
+        time, weekday = get_date_and_weekday()
+    
+        print("LED on")
+        gpio_utils.gpio_on(18)
+        sleep(.5)
+        print("LED off")
+        gpio_utils.gpio_off(18)
 
-bme280.load_calibration_params(bus, address)
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
-GPIO.setup(18, GPIO.OUT)
+        stable_temp, temp, hum, press, state, switch_signal = therm.check_temp_and_switch()        
 
-
-def led_condition(f):
-    if round((f % .1) * 1111000) % 7 == 0:
-        return True
-    return False
-
-
-while True:
-    bme280_data = bme280.sample(bus, address)
-    humidity = bme280_data.humidity
-    pressure = bme280_data.pressure
-    ambient_temperature = bme280_data.temperature
-    fafhrenheite = 9.0 / 5.0 * ambient_temperature + 32
-    print('Humidity: {0}, Temperature: {1}, Pressure: {2}'.format(
-        humidity, fafhrenheite, pressure))
-    GPIO.setup(18, GPIO.OUT)
-    print("LED on")
-    GPIO.output(18, GPIO.HIGH)
-    sleep(1)
-    print("LED off")
-    GPIO.output(18, GPIO.LOW)
-
-    mode = 'cool'
-    current_temp_f = fafhrenheite
-    current_state = 'off'  # on/off
-    minutes_in_state = 0
-
-    therm = thermostat.thermostat("thermostat.config", mode)
-    code = therm.l2_switching(current_temp_f, current_state, minutes_in_state)
-    print(code)
-    with open('logs.txt', 'a') as file:
-        file.write('{4}  Humidity: {0}, Temperature: {1}, Pressure: {2}, Code: {3}'.format(
-            humidity, fafhrenheite, pressure, code, therm.time_now()))
-        file.write('\n')
-    sleep(4)
+        with open('logs.txt', 'a') as file:
+            line = '{0}, {1}, {2:.3f}, {2:.3f}, {3:.3f}, {4:.3f}, {5}, {6}\n'.format(
+                weekday, time, stable_temp, temp, hum, press, state, switch_signal)
+            file.write(line)
+        #sleep(4)
+except Exception as error:
+    write_and_print(error, "errors.txt")
+finally:
+    GPIO.cleanup

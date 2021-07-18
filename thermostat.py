@@ -6,8 +6,10 @@ Created on Wed Jul  7 19:56:45 2021
 @author: ted
 """
 from ast import literal_eval
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
+from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
+from time import sleep
 
 
 def write_and_print(error, error_file):
@@ -31,8 +33,13 @@ def in_intervals(val, intervals):
     return False
 
 
+def time_now_string():
+    return datetime.now().strftime("%H:%M")
+def time_in_n_minutes_string(N):
+    return (datetime.now() + timedelta(minutes=N)).strftime("%H:%M")
+
 class thermostat():
-    def __init__(self, config_file, current_mode, error_file="errors.txt"):
+    def __init__(self, config_file, current_mode, error_file="errors.txt",test_mode=False):
         self.error_file = error_file
         self.mode = current_mode
         # try:
@@ -45,25 +52,60 @@ class thermostat():
                 time_str = self.float_to_time(key)
                 settings[mode][time_str] = settings[mode].pop(key)
         self.settings = settings
+        self.initialize_switches(testing=test_mode)
+        self.stable_temp = self.get_temp_press_hum()[0]
+        self.state = "off"
+        self.time_state_change = datetime.now() - timedelta(minutes = 20)
+        self.time_temp_check = datetime.now()
         # except Exception as error:
         #   write_and_print(error, error_file)
+    def initialize_switches(self, testing = False):
+        for switch in ["gpio_fan", "gpio_compressor"]:
+            pin_num = self.settings[switch]
+            if testing:
+                gpio_on(pin_num)
+                sleep(1)
+                gpio_off(pin_num)
+                sleep(.5)
+                gpio_on(pin_num)
+                sleep(.5)
+            gpio_off(pin_num)
+    def initialize_bme(self):
+        self.bus, self.address = initialize_bme280(gpio_num=self.settings["gpio_bme"])
+    def update_relays(self, signal):
+        if signal != 0:
+            if self.state == "off" and signal == 1:
+                gpio_on(self.settings["gpio_compressor"])
+                sleep(10)
+                gpio_on(self.settings["gpio_fan"])
+                self.state = "on"
+                self.time_state_change = datetime.now()
+            elif self.state == "on" and signal == -1:
+                gpio_off(self.settings["gpio_compressor"])
+                sleep(10)
+                gpio_off(self.settings["gpio_fan"])
+                self.state = "off"
+                self.time_state_change = datetime.now()
+                
+    def get_temp_press_hum(self):
+        return temp_press_hum(self.bus, self.address)
 
-    def time_now(self):
-        return datetime.now().strftime("%H:%M")
-
-    def get_target_temp(self):
-        now = self.time_now()
-        dic = self.settings[self.mode]
-        times = list(dic.keys())
+    def get_target_temp(self, testing_time = None):
+        if testing_time:
+            now = testing_time
+        else:
+            now = time_now_string()
+        times = list(
+                    self.settings[self.mode].keys()
+                        )
         times.sort()
-        # print(times)
-        #L = len(times)
         for i in range(len(times) - 1, -1, -1):
             if now > times[i]:
                 thermostat_time = times[i]
                 break
         else:
-            thermostat_time = times[0]
+            thermostat_time = times[-1]
+        #print("thermostat_time: " + thermostat_time)
         return self.settings[self.mode][thermostat_time]
 
     def float_to_time(self, flt):
@@ -72,7 +114,7 @@ class thermostat():
         time_str = '{:02d}:{:02d}'.format(div, mod)
         return time_str
 
-    def l1_switching(self, current_temp_f):
+    def get_switching_signal(self, current_temp_f, testing_time=None):
         '''
         l1 can be overridden by l2 and l3
         Parameters
@@ -86,7 +128,7 @@ class thermostat():
         -1 if element should turn off if it is on.
         '''
 
-        target_temp = self.get_target_temp()
+        target_temp = self.get_target_temp(testing_time=testing_time)
         sign = {"cool": 1, "heat": -1}[self.mode]
         diff = sign * (current_temp_f - target_temp)
 
@@ -98,9 +140,9 @@ class thermostat():
             out = 0
         return out
 
-    def l2_switching(self, current_temp_f, state, minutes_in_state):
-        # if it has run to long, turn it off no matter what
-        # if it has only been off for a short time minutes, keep it off
+    def get_safe_switching_signal(self, current_temp_f, state, minutes_in_state, testing_time = None):
+        ''' if it has run to long, turn it off no matter what
+         if it has only been off for a short time minutes, keep it off'''
         if state == 'on':
             if minutes_in_state > self.settings["max_on"]:
                 return -1  # make it rest
@@ -115,24 +157,77 @@ class thermostat():
         elif out == -1 and state == 'off':
             out = 0
         return out
+    
+    def check_temp_and_switch(self):
+        temp, press, hum = self.get_temp_press_hum()
+        now = datetime.now()
+        minutes_since_last_probe = (now - self.time_temp_check).seconds/60
+        minutes_in_state =         (now - self.time_state_change).seconds/60
+        self.stable_temp = \
+        (self.settings["time_averaging_minutes"]*self.stable_temp + \
+                            minutes_since_last_probe*temp)/         \
+        (self.settings["time_averaging_minutes"] + minutes_since_last_probe)
+        
+        switch_signal = self.get_safe_switching_signal(self.stable_temp, 
+                                                       self.state, 
+                                                       minutes_in_state)
+        self.update_relays(switch_signal)
+        return self.stable_temp, temp, hum, press, self.state, switch_signal
+        
+        
 
 
 def test1():
     x = thermostat("thermostat.config", "cool")
     for t in [75, 75.5, 7, 76.5, 77, 77.5, 78, 78.5, 79, 79.5, 80, 80.5]:
         print(t, x.l1_switching(t))
+   
 
 
 if __name__ == "__main__":
-    mode = sys.argv[1]
-    current_temp_f = sys.argv[2]
-    current_state = sys.argv[3]  # on/off
-    minutes_in_state = sys.argv[4]
+    import matplotlib.pyplot as plt
+    
+    therm = thermostat("thermostat.config", "cool")
+    x = []
+    y = []
+    for i in range(24*60):
+        h, m = divmod(i, 60)
+        time_str = '{:02d}:{:02d}'.format(h,m)
+        x.append(i/60)
+        y.append(therm.get_target_temp(testing_time = time_str))
+        
+    plt.plot(x, y)
+    plt.show()
+            
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
+    
+   
 
-    therm = thermostat("thermostat.config", mode)
-    print(therm.l2_switching(current_temp_f, current_state, minutes_in_state))
-
-
-x = thermostat("thermostat.config", "cool")
-for t in [75, 75.5, 7, 76.5, 77, 77.5, 78, 78.5, 79, 79.5, 80, 80.5]:
-    print(t, x.l1_switching(t))
