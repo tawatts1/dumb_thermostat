@@ -24,7 +24,7 @@ def temp_press_hum(bus, address):
     return fafhrenheite, pressure, humidity
 
 def gpio_on(pin_number):
-    GPIO.output(pin_number, GPIO.HIGH)
+    GPIO.output(pin_number, GPIO.LOW)
 
 def gpio_off(pin_number):
-    GPIO.output(pin_number, GPIO.LOW)
+    GPIO.output(pin_number, GPIO.HIGH)
