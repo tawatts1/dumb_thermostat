@@ -25,6 +25,8 @@ def temp_press_hum(bus, address):
 
 def gpio_init(pin_number):
     GPIO.setup(pin_number, GPIO.OUT)
+    gpio_off(pin_number)
+    
 def gpio_on(pin_number):
     GPIO.output(pin_number, GPIO.LOW)
 
