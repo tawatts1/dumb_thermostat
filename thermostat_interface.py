@@ -6,7 +6,10 @@ Created on Mon Jul 26 17:14:59 2021
 @author: ted
 """
 from datetime import datetime, timedelta
-from pandas import read_csv
+try:
+    from pandas import read_csv
+except ModuleNotFoundError:
+    pass
 try:
     import gpio_utils
 except ModuleNotFoundError:
