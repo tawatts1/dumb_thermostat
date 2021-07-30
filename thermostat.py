@@ -8,9 +8,10 @@ Created on Wed Jul  7 19:56:45 2021
 from ast import literal_eval
 from datetime import datetime, timedelta
 import sys
-from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
+#from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
 from time import sleep
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
+from thermostat_interface import realtime_interface, testing_interface
 
 
 def write_and_print(error, error_file):
@@ -27,20 +28,29 @@ def in_intervals(val, intervals):
     '''
     returns True if time value is inside a list of 2 intervals
     '''
+    #print(val, intervals)
     for interval in intervals:
         if (val < interval[1] and val >= interval[0]) or \
                 (interval[1] < interval[0] and (val < interval[1] or val >= interval[0])):
             return True
     return False
 
-
-def time_now_string():
-    return datetime.now().strftime("%H:%M")
-def time_in_n_minutes_string(N):
-    return (datetime.now() + timedelta(minutes=N)).strftime("%H:%M")
+def in_intervals_time_float(val, intervals):
+    '''
+    Handles case when val is a time like 22:30:14 and intervals is like [(13.5, 15)]
+    '''
+    float_val = 0
+    pieces = val.split(':')
+    if len(pieces) == 2:
+        float_val = int(pieces[0]) + int(pieces[1])/60
+    elif len(pieces) == 3:
+        float_val = int(pieces[0]) + int(pieces[1])/60 + int(pieces[2])/3600
+    else:
+        raise TypeError
+    return in_intervals(float_val, intervals)
 
 class thermostat():
-    def __init__(self, config_file, current_mode, error_file="errors.txt",test_mode=False):
+    def __init__(self, config_file, current_mode, error_file="errors.txt",test_file = ''):
         self.error_file = error_file
         self.mode = current_mode
         # try:
@@ -53,14 +63,25 @@ class thermostat():
                 time_str = self.float_to_time(key)
                 settings[mode][time_str] = settings[mode].pop(key)
         self.settings = settings
-        self.initialize_bme()
-        self.initialize_switches(testing=test_mode)
-        self.stable_temp = self.get_temp_press_hum()[0]
+        if test_file == '':
+            self.pi_interface = realtime_interface(self.settings['gpio_fan'],
+                                                   self.settings['gpio_compressor'],
+                                                   self.settings['gpio_led'])
+            self.testing = False
+        else:
+            self.pi_interface = testing_interface(test_file)
+            self.testing = True
+        #self.initialize_bme()
+        #self.initialize_switches(testing=test_mode)
+        self.stable_temp = self.pi_interface.temp_press_hum()[0]
+        
         self.state = "off"
         self.time_state_change = datetime.now() - timedelta(minutes = 20)
         self.time_temp_check = datetime.now()
+        self.pi_interface.increment()
         # except Exception as error:
         #   write_and_print(error, error_file)
+    '''
     def initialize_switches(self, testing = False):
         for switch in ["gpio_fan", "gpio_compressor"]:
             pin_num = self.settings[switch]
@@ -75,29 +96,20 @@ class thermostat():
             gpio_off(pin_num)
     def initialize_bme(self):
         self.bus, self.address = initialize_bme280(gpio_num=self.settings["gpio_bme"])
+    '''
+    def sleep(self, n):
+        if not self.testing:
+            sleep(n)
     def update_relays(self, signal):
         if signal != 0:
-            if self.state == "off" and signal == 1:
-                gpio_on(self.settings["gpio_compressor"])
-                sleep(10)
-                gpio_on(self.settings["gpio_fan"])
-                self.state = "on"
-                self.time_state_change = datetime.now()
-            elif self.state == "on" and signal == -1:
-                gpio_off(self.settings["gpio_compressor"])
-                sleep(10)
-                gpio_off(self.settings["gpio_fan"])
-                self.state = "off"
-                self.time_state_change = datetime.now()
-                
-    def get_temp_press_hum(self):
-        return temp_press_hum(self.bus, self.address)
+            self.pi_interface.compressor_onoff(signal)
+            self.sleep(10)
+            self.pi_interface.fan_onoff(signal)
+            self.time_state_change = self.pi_interface.datetime_now()
+            self.state = {1:'on', -1:'off'}[signal]
 
-    def get_target_temp(self, testing_time = None):
-        if testing_time:
-            now = testing_time
-        else:
-            now = time_now_string()
+    def get_target_temp(self):
+        now = self.pi_interface.time_str()
         times = list(
                     self.settings[self.mode].keys()
                         )
@@ -117,7 +129,7 @@ class thermostat():
         time_str = '{:02d}:{:02d}'.format(div, mod)
         return time_str
 
-    def get_switching_signal(self, current_temp_f, testing_time=None):
+    def get_switching_signal(self, current_temp_f):
         '''
         l1 can be overridden by l2 and l3
         Parameters
@@ -131,7 +143,7 @@ class thermostat():
         -1 if element should turn off if it is on.
         '''
 
-        target_temp = self.get_target_temp(testing_time=testing_time)
+        target_temp = self.get_target_temp()
         sign = {"cool": 1, "heat": -1}[self.mode]
         diff = sign * (current_temp_f - target_temp)
 
@@ -143,29 +155,54 @@ class thermostat():
             out = 0
         return out
 
-    def get_safe_switching_signal(self, current_temp_f, state, minutes_in_state, testing_time = None):
+    def get_safe_switching_signal(self, current_temp_f, state, minutes_in_state):
         ''' if it has run to long, turn it off no matter what
          if it has only been off for a short time minutes, keep it off'''
+        time_now = self.pi_interface.time_str()
         if state == 'on':
+            ''' #On priorities: 
+                1. make sure it has not been on too long
+                2. keep it on if it has not been on very long
+                3. if it is in precool, keep it on. 
+            '''
+            #Make sure it has not been on too long
             if minutes_in_state > self.settings["max_on"]:
+                #print(time_now, 'make it rest')
                 return -1  # make it rest
+            #Make sure it has not been on too short
             elif minutes_in_state < self.settings["min_on"]:
                 return 0  # keep it on
-        elif state == 'off' and minutes_in_state < self.settings["min_off"]:
-            return 0  # keep it off so it can rest
-
+            #Make sure if none of the above apply, that it stays on in precool/preheat
+            elif in_intervals_time_float(time_now, self.settings['pre' + self.mode]):
+                #print(time_now, 'keep it on precool')
+                return 0 # keep it on because it has not been on too long
+        elif state == 'off' :
+            ''' Off priorities:
+                1. keep it off if it has not been off very long
+                2. if it is in a precool period, turn it on. 
+            '''
+            #Make sure it has a chance to rest off
+            if minutes_in_state < self.settings["min_off"]:
+                return 0  # keep it off so it can rest
+            #If it has had a chance to rest and it is in precool period, turn on
+            elif in_intervals_time_float(time_now, self.settings['pre' + self.mode]):
+                #print(time_now, 'precool')
+                return 1 # turn it on to preheat or precool
         out = self.get_switching_signal(current_temp_f)
         if out == 1 and state == 'on':
             out = 0  # No need to send a 1
         elif out == -1 and state == 'off':
-            out = 0
+            out = 0 # No need to send a -1
+        #if out !=0:
+        #    print(time_now, out, 'final signal')
         return out
     
     def check_temp_and_switch(self):
-        temp, press, hum = self.get_temp_press_hum()
-        now = datetime.now()
+        temp, press, hum = self.pi_interface.temp_press_hum()        
+        now = self.pi_interface.datetime_now()
         minutes_since_last_probe = (now - self.time_temp_check).seconds/60
         minutes_in_state =         (now - self.time_state_change).seconds/60
+        self.time_temp_check = now
         self.stable_temp = \
         (self.settings["time_averaging_minutes"]*self.stable_temp + \
                             minutes_since_last_probe*temp)/         \
@@ -175,8 +212,13 @@ class thermostat():
                                                        self.state, 
                                                        minutes_in_state)
         self.update_relays(switch_signal)
-        return self.stable_temp, temp, hum, press, self.state, switch_signal
         
+        weekday = self.pi_interface.weekday()
+        datetime_str = self.pi_interface.datetime_str()
+        self.pi_interface.increment()
+        return weekday, datetime_str, self.stable_temp, temp, hum, press, self.state, switch_signal
+    def cleanup(self):
+        self.pi_interface.cleanup()
         
 
 
