@@ -8,7 +8,7 @@ Created on Mon Jul 26 17:14:59 2021
 from datetime import datetime, timedelta
 try:
     from pandas import read_csv
-except ModuleNotFoundError:
+except ImportError:
     pass
 try:
     import gpio_utils
@@ -59,7 +59,7 @@ class realtime_interface():
         if self.led_state == 0:
             gpio_utils.gpio_on(self.gpio_led)
         elif self.led_state == 1:
-            gpio_utils.gpio_ff(self.gpio_led)
+            gpio_utils.gpio_off(self.gpio_led)
         else:
             raise ValueError
         self.led_state = 1-self.led_state
