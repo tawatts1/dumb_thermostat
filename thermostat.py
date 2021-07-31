@@ -50,7 +50,7 @@ def in_intervals_time_float(val, intervals):
     return in_intervals(float_val, intervals)
 
 class thermostat():
-    def __init__(self, config_file, current_mode, error_file="errors.txt",test_file = ''):
+    def __init__(self, config_file, current_mode, error_file="errors.txt",test_file = '', names = None):
         self.error_file = error_file
         self.mode = current_mode
         # try:
@@ -69,7 +69,7 @@ class thermostat():
                                                    self.settings['gpio_led'])
             self.testing = False
         else:
-            self.pi_interface = testing_interface(test_file)
+            self.pi_interface = testing_interface(test_file, names = names)
             self.testing = True
         #self.initialize_bme()
         #self.initialize_switches(testing=test_mode)

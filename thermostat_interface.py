@@ -69,8 +69,8 @@ class realtime_interface():
 
 
 class testing_interface():
-    def __init__(self, fname, pass_time = True):
-        self.df = read_csv(fname, header = 0, sep=', ', engine='python')
+    def __init__(self, fname, pass_time = True, names = None):
+        self.df = read_csv(fname, header = 0, sep=', ', engine='python', names = names)
         self.pass_time = pass_time
         self.i = 0
     def temp_press_hum(self):
