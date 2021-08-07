@@ -7,7 +7,7 @@ Created on Wed Jul  7 19:56:45 2021
 """
 from ast import literal_eval
 from datetime import datetime, timedelta
-import sys
+#import sys
 #from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
 from time import sleep
 #import RPi.GPIO as GPIO
@@ -50,9 +50,9 @@ def in_intervals_time_float(val, intervals):
     return in_intervals(float_val, intervals)
 
 class thermostat():
-    def __init__(self, config_file, current_mode, error_file="errors.txt",test_file = '', names = None):
+    def __init__(self, config_file, error_file="errors.txt",test_file = '', names = None):
         self.error_file = error_file
-        self.mode = current_mode
+        #self.mode = 
         # try:
         with open(config_file, 'r') as file:
             txt = file.read()
@@ -71,43 +71,54 @@ class thermostat():
         else:
             self.pi_interface = testing_interface(test_file, names = names)
             self.testing = True
-        #self.initialize_bme()
-        #self.initialize_switches(testing=test_mode)
-        self.stable_temp = self.pi_interface.temp_press_hum()[0]
         
+        self.stable_temp = self.pi_interface.temp_press_hum()[0]
+        self.mode = self.calc_mode(self.stable_temp)
         self.state = "off"
         self.time_state_change = datetime.now() - timedelta(minutes = 20)
         self.time_temp_check = datetime.now()
         self.pi_interface.increment()
         # except Exception as error:
         #   write_and_print(error, error_file)
-    '''
-    def initialize_switches(self, testing = False):
-        for switch in ["gpio_fan", "gpio_compressor"]:
-            pin_num = self.settings[switch]
-            GPIO.setup(pin_num, GPIO.OUT)
-            if testing:
-                gpio_on(pin_num)
-                sleep(1)
-                gpio_off(pin_num)
-                sleep(.5)
-                gpio_on(pin_num)
-                sleep(.5)
-            gpio_off(pin_num)
-    def initialize_bme(self):
-        self.bus, self.address = initialize_bme280(gpio_num=self.settings["gpio_bme"])
-    '''
+    
     def sleep(self, n):
         if not self.testing:
             sleep(n)
-    def update_relays(self, signal):
+    
+    def calc_mode(self, temp):
+        # mode as in 'cool' or 'heat'
+        
+        if   temp > self.settings['no_compressor'][1]:
+            return 'cool'
+        elif temp < self.settings['no_compressor'][0]:
+            return 'heat'
+        else:
+            return 0
+    def update_mode_relay(self, temp):
+        #updates mode relay
+        new_mode = self.calc_mode(temp)
+        if new_mode: # !=0
+            if new_mode != self.mode: # if we need to change it
+                self.mode = new_mode
+                self.pi_interface.switch_heatcool(new_mode)
+                self.sleep(4)
+    def update_f_c_relays(self, signal):
+        #updates fan and compressor relays
         if signal != 0:
             self.pi_interface.compressor_onoff(signal)
             self.sleep(10)
             self.pi_interface.fan_onoff(signal)
             self.time_state_change = self.pi_interface.datetime_now()
             self.state = {1:'on', -1:'off'}[signal]
-
+    '''def update_all_relays(self, signal, temp):
+        self.update_mode_relay(temp)
+        if signal != 0:
+            self.pi_interface.compressor_onoff(signal)
+            self.sleep(10)
+            self.pi_interface.fan_onoff(signal)
+            self.time_state_change = self.pi_interface.datetime_now()
+    '''     #  self.state = {1:'on', -1:'off'}[signal]
+            
     def get_target_temp(self):
         now = self.pi_interface.time_str()
         times = list(
@@ -198,7 +209,7 @@ class thermostat():
         return out
     
     def check_temp_and_switch(self):
-        temp, press, hum = self.pi_interface.temp_press_hum()        
+        temp, press, hum = self.pi_interface.temp_press_hum() 
         now = self.pi_interface.datetime_now()
         minutes_since_last_probe = (now - self.time_temp_check).seconds/60
         minutes_in_state =         (now - self.time_state_change).seconds/60
@@ -208,10 +219,11 @@ class thermostat():
                             minutes_since_last_probe*temp)/         \
         (self.settings["time_averaging_minutes"] + minutes_since_last_probe)
         
+        self.update_mode_relay(self.stable_temp)
         switch_signal = self.get_safe_switching_signal(self.stable_temp, 
                                                        self.state, 
                                                        minutes_in_state)
-        self.update_relays(switch_signal)
+        self.update_f_c_relays(switch_signal) # fan, compressor relays
         
         weekday = self.pi_interface.weekday()
         datetime_str = self.pi_interface.datetime_str()

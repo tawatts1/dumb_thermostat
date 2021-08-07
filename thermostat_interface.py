@@ -16,31 +16,38 @@ except ModuleNotFoundError:
     pass
         
 class realtime_interface():
-    def __init__(self, gpio_fan, gpio_compressor, gpio_led):
-        self.gpio_fan = gpio_fan
+    def __init__(self, gpio_fan, gpio_compressor, gpio_switch, gpio_led):
+        self.gpio_fan        = gpio_fan
         self.gpio_compressor = gpio_compressor
-        self.gpio_led = gpio_led
+        self.gpio_switch     = gpio_switch
+        self.gpio_led        = gpio_led
         
         self.bus, self.address = gpio_utils.initialize_bme280()
         
         gpio_utils.gpio_init(self.gpio_fan)
         gpio_utils.gpio_init(self.gpio_compressor)
+        gpio_utils.gpio_init(self.gpio_switch)
         gpio_utils.gpio_init(self.gpio_led)
         self.led_state = 0
         
     def temp_press_hum(self):
         return gpio_utils.temp_press_hum(self.bus, self.address)
     
-    def compressor_onoff(self, signal):
-        if signal == 1:
-            gpio_utils.gpio_on(self.gpio_compressor)
-        else:
-            gpio_utils.gpio_off(self.gpio_compressor)
     def fan_onoff(self, signal):
         if signal == 1:
-            gpio_utils.gpio_on(self.gpio_fan)
+            gpio_utils.gpio_on( self.gpio_fan)
         else:
             gpio_utils.gpio_off(self.gpio_fan) 
+    def compressor_onoff(self, signal):
+        if signal == 1:
+            gpio_utils.gpio_on( self.gpio_compressor)
+        else:
+            gpio_utils.gpio_off(self.gpio_compressor)
+    def switch_heatcool(self, heatcool):
+        if   heatcool == 'heat':
+            gpio_utils.gpio_on( self.gpio_switch)
+        elif heatcool == 'cool':
+            gpio_utils.gpio_off(self.gpio_switch) 
             
     def time_str(self):
         return datetime.now().strftime("%H:%M:%S")
@@ -77,6 +84,8 @@ class testing_interface():
         data_line = self.df.iloc[self.i]
         return data_line['temp'], data_line['press'], data_line['hum']
     def compressor_onoff(self, signal):
+        pass
+    def switch_heatcool(self, heatcool):
         pass
     def fan_onoff(self, signal):
         pass
