@@ -124,9 +124,11 @@ class thermostat():
         now = self.pi_interface.time_str()
         weekday = self.pi_interface.weekday()
         if weekday in ('Saturday', 'Sunday'):
-            times = list(self.settings['weekend_' + self.mode].keys() )
+            mode_prefix = 'weekend_'
+            times = list(self.settings[mode_prefix + self.mode].keys() )
         else:
-            times = list(self.settings[self.mode].keys() )
+            mode_prefix = ''
+            times = list(self.settings[mode_prefix + self.mode].keys() )
         times.sort()
         for i in range(len(times) - 1, -1, -1):#start, stop, step
             if now > times[i]:
@@ -135,7 +137,7 @@ class thermostat():
         else:
             thermostat_time = times[-1]
         #print("thermostat_time: " + thermostat_time)
-        return self.settings[self.mode][thermostat_time]
+        return self.settings[mode_prefix + self.mode][thermostat_time]
 
     def float_to_time(self, flt):
         div, mod = divmod(float(flt), 1)
