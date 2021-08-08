@@ -121,11 +121,13 @@ class thermostat():
             
     def get_target_temp(self):
         now = self.pi_interface.time_str()
-        times = list(
-                    self.settings[self.mode].keys()
-                        )
+        weekday = self.pi_interface.weekday()
+        if weekday in ('Saturday', 'Sunday'):
+            times = list(self.settings['weekend_' + self.mode].keys() )
+        else:
+            times = list(self.settings[self.mode].keys() )
         times.sort()
-        for i in range(len(times) - 1, -1, -1):
+        for i in range(len(times) - 1, -1, -1):#start, stop, step
             if now > times[i]:
                 thermostat_time = times[i]
                 break
@@ -169,12 +171,11 @@ class thermostat():
     def get_safe_switching_signal(self, current_temp_f, state, minutes_in_state):
         ''' if it has run to long, turn it off no matter what
          if it has only been off for a short time minutes, keep it off'''
-        time_now = self.pi_interface.time_str()
+        
         if state == 'on':
             ''' #On priorities: 
                 1. make sure it has not been on too long
                 2. keep it on if it has not been on very long
-                3. if it is in precool, keep it on. 
             '''
             #Make sure it has not been on too long
             if minutes_in_state > self.settings["max_on"]:
@@ -183,10 +184,7 @@ class thermostat():
             #Make sure it has not been on too short
             elif minutes_in_state < self.settings["min_on"]:
                 return 0  # keep it on
-            #Make sure if none of the above apply, that it stays on in precool/preheat
-            elif in_intervals_time_float(time_now, self.settings['pre' + self.mode]):
-                #print(time_now, 'keep it on precool')
-                return 0 # keep it on because it has not been on too long
+            
         elif state == 'off' :
             ''' Off priorities:
                 1. keep it off if it has not been off very long
@@ -195,10 +193,7 @@ class thermostat():
             #Make sure it has a chance to rest off
             if minutes_in_state < self.settings["min_off"]:
                 return 0  # keep it off so it can rest
-            #If it has had a chance to rest and it is in precool period, turn on
-            elif in_intervals_time_float(time_now, self.settings['pre' + self.mode]):
-                #print(time_now, 'precool')
-                return 1 # turn it on to preheat or precool
+            
         out = self.get_switching_signal(current_temp_f)
         if out == 1 and state == 'on':
             out = 0  # No need to send a 1
