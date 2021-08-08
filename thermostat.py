@@ -57,7 +57,7 @@ class thermostat():
         with open(config_file, 'r') as file:
             txt = file.read()
         settings = literal_eval(txt)
-        for mode in ["cool", "heat"]:
+        for mode in ["cool", "heat", "weekend_cool", "weekend_heat"]:
             keys = tuple(settings[mode].keys())
             for key in keys:
                 time_str = self.float_to_time(key)
