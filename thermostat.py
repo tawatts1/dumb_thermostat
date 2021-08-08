@@ -66,6 +66,7 @@ class thermostat():
         if test_file == '':
             self.pi_interface = realtime_interface(self.settings['gpio_fan'],
                                                    self.settings['gpio_compressor'],
+                                                   self.settings['gpio_switch'],
                                                    self.settings['gpio_led'])
             self.testing = False
         else:
