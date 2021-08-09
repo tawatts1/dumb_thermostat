@@ -13,17 +13,6 @@ from time import sleep
 #import RPi.GPIO as GPIO
 from thermostat_interface import realtime_interface, testing_interface
 
-
-def write_and_print(error, error_file):
-    with open(error_file, 'a') as file:
-        file.write('------\n' +
-                   str(datetime.now()) +
-                   ':\n' +
-                   str(error) +
-                   '\n')
-    print(error)
-
-
 def in_intervals(val, intervals):
     '''
     returns True if time value is inside a list of 2 intervals

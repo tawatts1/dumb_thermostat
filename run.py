@@ -2,34 +2,39 @@
 # -*- coding: utf-8 -*-
 
 #import RPi.GPIO as GPIO
-from thermostat import thermostat, write_and_print
+from thermostat import thermostat
 #import gpio_utils 
-from numpy.random import normal
+from numpy.random import exponential
+from traceback import print_exc
+
+
+def tuple_to_str(lst, sep=', '):
+    out = ''
+    for i in range(len(lst)-1):
+        out += str(lst[i]) + sep
+    out += str(lst[-1])
+    return out
 
 #initial conditions: 
 mode = 'cool'
 therm = thermostat("thermostat.config", mode)#, test_file = 'logs.txt.bak')
 
-#try:
-while True:
-    therm.sleep(abs(normal(8,4))+2)
+try:
+    while True:
+        therm.sleep(exponential(8)+2)
     
-    #print("LED on")
-    #gpio_utils.gpio_on(18)
-    therm.sleep(.5)
-    #print("LED off")
-    #gpio_utils.gpio_off(18)
+        
+    
+        with open('logs.txt', 'a') as file:
+            line = tuple_to_str( therm.check_temp_and_switch() ) + '\n'   
+            file.write(line)
+            #sleep(4)
+        #x=1/0
 
-    weekday, time, stable_temp, temp, hum, press, state, switch_signal = therm.check_temp_and_switch()        
-
-    with open('logs.txt', 'a') as file:
-        line = '{0}, {1}, {2:.3f}, {3:.3f}, {4:.3f}, {5:.1f}, {6}, {7}\n'.format(
-            weekday, time, stable_temp, temp, hum, press, state, switch_signal)
-        file.write(line)
-        #sleep(4)
-'''
-except Exception as error:
-    write_and_print(error, "errors.txt")
+except:
+    with open("errors.txt", 'a') as file:
+        print_exc(file=file)
+        file.write("\n+++++++++++++++++++++++++++\n")
 finally:
     therm.cleanup()
-'''
+
