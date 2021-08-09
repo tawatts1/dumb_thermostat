@@ -6,7 +6,7 @@ from thermostat import thermostat
 #import gpio_utils 
 from numpy.random import exponential
 from traceback import print_exc
-
+from datetime import datetime
 
 def tuple_to_str(lst, sep=', '):
     out = ''
@@ -22,9 +22,7 @@ therm = thermostat("thermostat.config", mode)#, test_file = 'logs.txt.bak')
 try:
     while True:
         therm.sleep(exponential(8)+2)
-    
-        
-    
+        x = 1/0
         with open('logs.txt', 'a') as file:
             line = tuple_to_str( therm.check_temp_and_switch() ) + '\n'   
             file.write(line)
@@ -33,6 +31,7 @@ try:
 
 except:
     with open("errors.txt", 'a') as file:
+        file.write(datetime.now().strftime('%y-%m-%d %H:%M:%S') + '\n')
         print_exc(file=file)
         file.write("\n+++++++++++++++++++++++++++\n")
 finally:
