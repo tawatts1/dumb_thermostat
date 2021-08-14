@@ -4,6 +4,8 @@ import bme280
 import smbus2
 import RPi.GPIO as GPIO
 
+def set_mode():
+    GPIO.setmode(GPIO.BCM)
 
 def initialize_bme280():
     port = 1
@@ -34,10 +36,12 @@ def gpio_off(pin_number):
     GPIO.output(pin_number, GPIO.HIGH)
     
 def gpio_init_input(pin_number):
-    GPIO.setup(pin_number, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    GPIO.setup(pin_number, GPIO.IN)#, pull_up_down=GPIO.PUD_DOWN)
     
 def gpio_get(pin_number):
-    if GPIO.input(pin_number) == GPIO.HIGH:
+    x = GPIO.input(pin_number)
+    #print(x)
+    if x == GPIO.HIGH:
         return 1
     else:
         return 0
