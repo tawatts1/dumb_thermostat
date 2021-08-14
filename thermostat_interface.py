@@ -6,6 +6,7 @@ Created on Mon Jul 26 17:14:59 2021
 @author: ted
 """
 from datetime import datetime, timedelta
+from time import sleep
 try:
     from pandas import read_csv
 except ImportError:
@@ -29,6 +30,9 @@ class realtime_interface():
         gpio_utils.gpio_init(self.gpio_switch)
         gpio_utils.gpio_init(self.gpio_led)
         self.led_state = 0
+        for i in range(11):
+            sleep(.5)
+            self.increment()
         
     def temp_press_hum(self):
         return gpio_utils.temp_press_hum(self.bus, self.address)
@@ -70,6 +74,8 @@ class realtime_interface():
         else:
             raise ValueError
         self.led_state = 1-self.led_state
+    def sleep(self, n):
+        sleep(n)
         
         
 #####################################
@@ -102,6 +108,8 @@ class testing_interface():
     def increment(self):
         self.i += 1
     def cleanup(self):
+        pass
+    def sleep(self, n):
         pass
     
     

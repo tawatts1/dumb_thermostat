@@ -9,7 +9,7 @@ from ast import literal_eval
 from datetime import datetime, timedelta
 #import sys
 #from gpio_utils import gpio_on, gpio_off, initialize_bme280, temp_press_hum
-from time import sleep
+#from time import sleep
 #import RPi.GPIO as GPIO
 from thermostat_interface import realtime_interface, testing_interface
 
@@ -72,8 +72,7 @@ class thermostat():
         #   write_and_print(error, error_file)
     
     def sleep(self, n):
-        if not self.testing:
-            sleep(n)
+        self.pi_interface.sleep(n)
     
     def calc_mode(self, temp):
         # mode as in 'cool' or 'heat'

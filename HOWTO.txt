@@ -91,31 +91,38 @@ user-friendly way to setup wifi by now.
         sudo reboot
         
 2) Make program run on startup:
+    READ CAREFULLY
     alter the rc.local file:
             sudo nano /etc/rc.local
     The lines starting with # are comments and do not effect the program. 
-    Make sure you include the & at the end of the line that invokes the script. 
-        
-        
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
+    Make sure you include the & at the end of the line that invokes the script!
+    
+    here are the only non-commented lines in mine:
+        cd /home/tawatts1/dumb_thermostat
+        sudo python3 /home/tawatts1/dumb_thermostat/run.py &
+        exit 0
 
-# Print the IP address
-#_IP=$(hostname -I) || true
-#if [ "$_IP" ]; then
-#  printf "My IP address is %s\n" "$_IP"
-#fi
-python3 /home/tawatts1/dumb_thermostat/run.py &
+        python3 /home/tawatts1/dumb_thermostat/run.py &
+        exit 0
+    
 
-exit 0
- 
+3) Configure sudo reboot and sudo shutdown to not require passwd:
+ref: https://askubuntu.com/questions/159007/how-do-i-run-specific-sudo-commands-without-a-password
+
+        Use the NOPASSWD directive
+        
+        Using /etc/sudoers.d instead of modifying /etc/sudoers
+        As an alternative to editing the /etc/sudoers file, you could add the two lines to a new file in /etc/sudoers.d e.g. /etc/sudoers.d/shutdown. This is an elegant way of separating different changes to the sudo rights and also leaves the original sudoers file untouched for easier upgrades.
+        
+        Note: Again, you should use the command visudo to edit the file to make sure you do not lock yourself out of the system:
+        
+            sudo visudo -f /etc/sudoers.d/shutdown 
+        
+        add the lines
+        
+            user host = (root) NOPASSWD: /sbin/shutdown
+            user host = (root) NOPASSWD: /sbin/reboot
+4) power off:
+sudo shutdown -h now
+or
+sudo reboot
