@@ -32,6 +32,15 @@ def gpio_on(pin_number):
 
 def gpio_off(pin_number):
     GPIO.output(pin_number, GPIO.HIGH)
+    
+def gpio_init_input(pin_number):
+    GPIO.setup(pin_number, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    
+def gpio_get(pin_number):
+    if GPIO.input(pin_number) == GPIO.HIGH:
+        return 1
+    else:
+        return 0
 
 def cleanup():
     GPIO.cleanup()
