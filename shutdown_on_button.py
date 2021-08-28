@@ -5,7 +5,7 @@ import gpio_utils
 
 fname = "power_record.txt"
 with open(fname, 'a') as file:
-    file.write(datetime.now().strftime('%y-%m-%d %H:%M:%S') + ',1')
+    file.write(datetime.now().strftime('%y-%m-%d %H:%M:%S') + ',1\n')
 
 gpio_utils.set_mode()
 N=26
@@ -15,7 +15,7 @@ while True:
     if gpio_utils.gpio_get(N) == 1:
         #print('button pressed')
         with open(fname, 'a') as file: 
-            file.write(datetime.now().strftime('%y-%m-%d %H:%M:%S') + ',1')
+            file.write(datetime.now().strftime('%y-%m-%d %H:%M:%S') + ',0\n')
         call('sudo shutdown -h now'.split(' '))
         break
     else:
