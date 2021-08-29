@@ -51,12 +51,13 @@ class realtime_interface():
         self.compressor_onoff(0)
         self.sleep(1)
         self.fan_onoff(0)
-        self.sleep(30)
-        if   heatcool == 'heat':
-            gpio_utils.gpio_on( self.gpio_switch)
-        elif heatcool == 'cool':
-            gpio_utils.gpio_off(self.gpio_switch) 
-        self.sleep(30)
+        if heatcool in ('heat', 'cool'):
+            self.sleep(30)
+            if   heatcool == 'heat':
+                gpio_utils.gpio_on( self.gpio_switch)
+            elif heatcool == 'cool':
+                gpio_utils.gpio_off(self.gpio_switch) 
+            self.sleep(30)
             
     def time_str(self):
         return datetime.now().strftime("%H:%M:%S")

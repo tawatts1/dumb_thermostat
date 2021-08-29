@@ -63,9 +63,9 @@ class thermostat():
             self.testing = True
         
         self.stable_temp = self.pi_interface.temp_press_hum()[0]
-        self.mode = self.calc_mode(self.stable_temp)
+        self.mode = 'startup' #self.calc_mode(self.stable_temp)
         self.state = "off"
-        self.time_state_change = datetime.now() - timedelta(minutes = 20)
+        self.time_state_change = datetime.now() #- timedelta(minutes = 20) commented out to protect thermostat from starting up after blackout
         self.time_temp_check = datetime.now()
         self.pi_interface.increment()
         # except Exception as error:
@@ -88,6 +88,8 @@ class thermostat():
         new_mode = self.calc_mode(temp)
         if new_mode: # !=0
             if new_mode != self.mode: # if we need to change it
+                with open("mode_change.txt", "a") as file:
+                    file.wrtie('{0}, {1}, {2}\n'.format(self.mode, new_mode, self.pi_interface.datetime_str()))
                 self.mode = new_mode
                 self.pi_interface.switch_heatcool(new_mode)
                 self.sleep(4)

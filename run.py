@@ -15,9 +15,7 @@ def tuple_to_str(lst, sep=', '):
     out += str(lst[-1])
     return out
 
-#initial conditions: 
-mode = 'cool'
-therm = thermostat("thermostat.config", mode)#, test_file = 'logs.txt.bak')
+therm = thermostat("thermostat.config")#, test_file = 'logs.txt.bak')
 
 try:
     while True:
