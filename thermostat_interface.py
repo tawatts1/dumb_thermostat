@@ -48,10 +48,10 @@ class realtime_interface():
         else:
             gpio_utils.gpio_off(self.gpio_compressor)
     def switch_heatcool(self, heatcool):
-        self.compressor_onoff(0)
-        self.sleep(1)
-        self.fan_onoff(0)
         if heatcool in ('heat', 'cool'):
+            self.compressor_onoff(0)
+            self.sleep(1)
+            self.fan_onoff(0)
             self.sleep(30)
             if   heatcool == 'heat':
                 gpio_utils.gpio_on( self.gpio_switch)
