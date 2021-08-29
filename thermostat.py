@@ -89,7 +89,7 @@ class thermostat():
         if new_mode: # !=0
             if new_mode != self.mode: # if we need to change it
                 with open("mode_change.txt", "a") as file:
-                    file.wrtie('{0}, {1}, {2}\n'.format(self.mode, new_mode, self.pi_interface.datetime_str()))
+                    file.write('{0}, {1}, {2}\n'.format(self.mode, new_mode, self.pi_interface.datetime_str()))
                 self.mode = new_mode
                 self.pi_interface.switch_heatcool(new_mode)
                 self.sleep(4)
