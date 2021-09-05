@@ -15,9 +15,8 @@ def tuple_to_str(lst, sep=', '):
     out += str(lst[-1])
     return out
 
-therm = thermostat("thermostat.config")#, test_file = 'logs.txt.bak')
-
 try:
+    therm = thermostat("thermostat.config")#, test_file = 'logs.txt.bak')
     while True:
         therm.sleep(exponential(8)+2)
        
