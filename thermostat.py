@@ -113,6 +113,8 @@ class thermostat():
     def get_target_temp(self):
         now = self.pi_interface.time_str()
         weekday = self.pi_interface.weekday()
+        if self.mode not in ('heat', 'cool'):
+            return None
         if weekday in ('Saturday', 'Sunday'):
             mode_prefix = 'weekend_'
             times = list(self.settings[mode_prefix + self.mode].keys() )
