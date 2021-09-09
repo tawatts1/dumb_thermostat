@@ -117,7 +117,7 @@ class realtime_interface():
         time_float = time_float[0] + time_float[1]/60 + time_float[2]/3600
         datetime_str = time.strftime('%y-%m-%d %H:%M:%S')
         weekday = time.strftime('%A')
-        state = self.state
+        state = self.get_current_state()
         
         self.info_dict['temp'] = temp
         self.info_dict['press'] = press
@@ -129,6 +129,21 @@ class realtime_interface():
         self.info_dict['datetime_str'] = datetime_str
         self.info_dict['weekday'] = weekday
         self.info_dict['state'] = state
+    
+    def get_current_state(self):
+        if self.pin_states['compressor']:
+            if not self.pin_states['fan']:
+                raise ValueError('compressor on but not fan. shutdown to protect machine')
+            if self.pin_states['switch']:
+                state = 'heat'
+            else:
+                state = 'cool'
+        elif self.pin_states['fan']:
+            state = 'fan'
+        else:
+            state = 'off'
+        return state
+        
         
     def cleanup(self):
         gpio_utils.cleanup()
