@@ -35,6 +35,7 @@ class realtime_interface():
         self.pins['led']        = settings['gpio_led']
         
         self.bus, self.address = gpio_utils.initialize_bme280()
+        temp_0 = gpio_utils.temp_press_hum(self.bus, self.address)[0]
         
         gpio_utils.gpio_init(self.pins['fan'])
         gpio_utils.gpio_init(self.pins['compressor'])
@@ -43,7 +44,8 @@ class realtime_interface():
         
         self.info_dict = {'state':'off', 
                           'time_average':float(settings["time_averaging_minutes"]),
-                          'time':datetime.now()}
+                          'time':datetime.now(),
+                          'stable_temp':temp_0}
         
         self.pin_states = {'fan':0,
                            'compressor':0,
