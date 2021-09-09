@@ -55,6 +55,8 @@ class custodian():
         
     def update_info_dict(self):
         self.interface.update_info_dict()
+    def cleanup(self):
+        self.interface.cleanup()
         
     def gen_and_deliver_command(self):
         #not applicable for custodian. 
@@ -118,6 +120,9 @@ class forecaster():
     
     def update_info_dict(self):
         self.interface.update_info_dict()
+        
+    def cleanup(self):
+        self.interface.cleanup()
         
     def gen_and_deliver_command(self):
         # is applicable for forecaster, but I would never use it. 
@@ -198,6 +203,8 @@ class simple_thermostat():
         
     def update_info_dict(self):
         self.interface.update_info_dict()
+    def cleanup(self):
+        self.interface.cleanup()
     def gen_and_deliver_command(self):
         actual_temp = self.info_dict['stable_temp']
         t = self.info_dict['time_float']

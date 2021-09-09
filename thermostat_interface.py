@@ -130,13 +130,15 @@ class realtime_interface():
         gpio_utils.cleanup()
     def increment(self):
         #used in testing, also used to toggle led
-        if self.led_state == 0:
-            gpio_utils.gpio_on(self.gpio_led)
-        elif self.led_state == 1:
-            gpio_utils.gpio_off(self.gpio_led)
+        current_state = self.pin_states['led']
+        if current_state == 0:
+            gpio_utils.gpio_on(self.pins['led'])
+        elif current_state == 1:
+            gpio_utils.gpio_off(self.pins['led'])
         else:
             raise ValueError
-        self.led_state = 1-self.led_state
+        self.pin_states['led'] = 1-current_state
+        
     def sleep(self, n):
         sleep(n)
         
