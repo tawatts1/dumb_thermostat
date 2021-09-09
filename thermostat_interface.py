@@ -41,7 +41,9 @@ class realtime_interface():
         gpio_utils.gpio_init(self.pins['switch'])
         gpio_utils.gpio_init(self.pins['led'])
         
-        self.info_dict = {'state':'off', 'time_average':float(settings["time_averaging_minutes"])}
+        self.info_dict = {'state':'off', 
+                          'time_average':float(settings["time_averaging_minutes"]),
+                          'time':datetime.now()}
         
         self.pin_states = {'fan':0,
                            'compressor':0,
