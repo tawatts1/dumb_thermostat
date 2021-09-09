@@ -104,8 +104,8 @@ class realtime_interface():
         temp, press, hum = gpio_utils.temp_press_hum(self.bus, self.address)
         time = datetime.now()
         stable_temp = time_average(time, 
-                                   self.settings['time'], 
-                                   self.settings['stable_temp'], 
+                                   self.info_dict['time'], 
+                                   self.info_dict['stable_temp'], 
                                    temp, 
                                    mean_time = self.info_dict['time_average'])
         time_str = time.strftime("%H:%M:%S")
