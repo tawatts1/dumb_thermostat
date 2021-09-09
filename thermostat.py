@@ -57,8 +57,8 @@ class custodian():
         self.interface.update_info_dict()
     def cleanup(self):
         self.interface.cleanup()
-    def sleep(self):
-        self.interface.sleep()
+    def sleep(self, n):
+        self.interface.sleep(n)
         
     def gen_and_deliver_command(self):
         #not applicable for custodian. 
@@ -124,8 +124,8 @@ class forecaster():
         self.interface.update_info_dict()
     def cleanup(self):
         self.interface.cleanup()
-    def sleep(self):
-        self.interface.sleep()
+    def sleep(self, n):
+        self.interface.sleep(n)
         
     def gen_and_deliver_command(self):
         # is applicable for forecaster, but I would never use it. 
@@ -208,8 +208,8 @@ class simple_thermostat():
         self.interface.update_info_dict()
     def cleanup(self):
         self.interface.cleanup()
-    def sleep(self):
-        self.interface.sleep()
+    def sleep(self, n):
+        self.interface.sleep(n)
     def gen_and_deliver_command(self):
         actual_temp = self.info_dict['stable_temp']
         t = self.info_dict['time_float']
