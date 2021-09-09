@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-#import RPi.GPIO as GPIO
-from thermostat import thermostat
-#import gpio_utils 
+from ast import literal_eval
 from numpy.random import exponential
 from traceback import print_exc
 from datetime import datetime
+
+from thermostat_interface import realtime_interface
+from thermostat import custodian, forecaster, simple_thermostat
 
 def tuple_to_str(lst, sep=', '):
     out = ''
@@ -16,12 +17,31 @@ def tuple_to_str(lst, sep=', '):
     return out
 
 try:
-    therm = thermostat("thermostat.config")#, test_file = 'logs.txt.bak')
+    with open('config/run.config', 'r') as file:
+           txt = file.read()
+    settings = literal_eval(txt)
+    min_time = settings['min_sampling_interval']
+    max_time = settings['max_sampling_interval']
+    mean_exp = settings['average_interval'] - min_time
+    if mean_exp < 0:
+        raise ValueError('average interval cannot be smaller than min sampling interval')
+    
+    shared_dict = {}
+    pi = realtime_interface("config/pi.config",           shared_dict)
+    l1 = custodian('config/custodian.config',             pi, shared_dict)
+    l2 = forecaster('config/forecaster.config',           l1, shared_dict)
+    therm = simple_thermostat('config/thermostat.config', l2, shared_dict)
+    therm.update_info_dict()
+    
     while True:
-        therm.sleep(exponential(8)+2)
-       
+        t = min(exponential(mean_exp) + min_time, max_time)
+        therm.sleep(t)
+        therm.update_info_dict()
+        therm.gen_and_deliver_command()
+        keys = ['weekday', 'datetime_str', 'stable_temp', 'temp', 'press', 'hum', 'state']
         with open('logs.txt', 'a') as file:
-            line = tuple_to_str( therm.check_temp_and_switch() ) + '\n'   
+            values = [shared_dict[k] for k in keys]
+            line = tuple_to_str( values ) + '\n'   
             file.write(line)
             #sleep(4)
         #x=1/0
