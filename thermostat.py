@@ -143,7 +143,7 @@ class forecaster():
             raise ValueError('unexpected command. cmd should be "heat", "cool", "off", "fan", or 0. ')
             
         weekday = self.info_dict['weekday']
-        hour = self.settings['time_float']
+        hour = self.info_dict['time_float']
         
         median_temp = self.temp_queue.get_percentile(0.5)
         if median_temp:
