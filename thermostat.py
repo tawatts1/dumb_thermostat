@@ -93,7 +93,7 @@ class custodian():
         else:
            cmd_out = cmd
         self.interface.deliver_command(cmd_out)
-        latest_state = self.settings['state']
+        latest_state = self.info_dict['state']
         
         if latest_state != state:
             self.time_state_change = self.info_dict['time']
