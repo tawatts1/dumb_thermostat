@@ -32,12 +32,12 @@ try:
     l2 = forecaster('config/forecaster.config',           l1, shared_dict)
     therm = simple_thermostat('config/thermostat.config', l2, shared_dict)
     therm.update_info_dict()
-    print(shared_dict)
+    #print(shared_dict)
     while True:
         t = min(exponential(mean_exp) + min_time, max_time)
         therm.sleep(t)
         therm.update_info_dict()
-        print(shared_dict)
+        #print(shared_dict)
         therm.gen_and_deliver_command()
         keys = ['weekday', 'datetime_str', 'stable_temp', 'temp', 'press', 'hum', 'state']
         with open('logs.txt', 'a') as file:
