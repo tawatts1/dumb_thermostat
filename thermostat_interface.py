@@ -106,6 +106,7 @@ class realtime_interface():
         self.sleep(sleep_sec) 
 
     def update_info_dict(self):
+        self.increment() # increment in time
         temp, press, hum = gpio_utils.temp_press_hum(self.bus, self.address)
         time = datetime.now()
         stable_temp = time_average(time, 
