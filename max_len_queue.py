@@ -28,8 +28,8 @@ class max_len_queue():
         for 25th percentile, p=.25
         etc
         '''
+        lst = self.q.copy()
         if len(lst)>0:
-            lst = self.q.copy()
             lst.sort()
             i = (len(lst)-1)*p//1
             return lst[i]
