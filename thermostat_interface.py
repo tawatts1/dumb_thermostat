@@ -87,10 +87,10 @@ class realtime_interface():
         else:
             raise ValueError('unexpected command')
         
-        print('pi state before: {0}'.format(self.info_dict['state']))
+        #print('pi state before: {0}'.format(self.info_dict['state']))
         if cmd != 0:
             self.info_dict['state'] = cmd
-        print('pi state after: {0}\n_____________________________'.format(self.info_dict['state']))
+        #print('pi state after: {0}\n_____________________________'.format(self.info_dict['state']))
             
             
     def hardware_switch(self, name, signal, sleep_sec = 10):

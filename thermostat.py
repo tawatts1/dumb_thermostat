@@ -92,7 +92,7 @@ class custodian():
                 cmd_out = cmd
         else:
            cmd_out = cmd
-        print('{0} => custodian => {1}'.format(cmd, cmd_out))
+        #print('{0} => custodian => {1}'.format(cmd, cmd_out))
         self.interface.deliver_command(cmd_out)
         latest_state = self.info_dict['state']
         
@@ -171,7 +171,7 @@ class forecaster():
                 cmd_out = use_mode
             else:
                 cmd_out = cmd
-        print('{0} => forecaster => {1}'.format(cmd, cmd_out))
+        #print('{0} => forecaster => {1}'.format(cmd, cmd_out))
         self.interface.deliver_command(cmd_out)
    
         
@@ -235,7 +235,7 @@ class simple_thermostat():
         # current state. 
         else:
             cmd_out = 0
-        print('thermostat => {0}'.format(cmd_out))
+        #print('thermostat => {0}'.format(cmd_out))
         self.interface.deliver_command(cmd_out)
     def deliver_command(self, cmd):
         pass
