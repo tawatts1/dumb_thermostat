@@ -59,12 +59,14 @@ class realtime_interface():
         if cmd in ('heat', 'cool', 'fan'):
             #make sure switch valve in correct position
             if cmd == 'heat':
+                #if the switch is not already on, turn it on. 
                 if not self.pin_states['switch']:
                     self.hardware_switch('switch', 1, sleep_sec=60)
-            else:
+            else: #cmd == cool
+                # if the switch is on, turn it off!
                 if self.pin_states['switch']:
                     self.hardware_switch('switch', 0, sleep_sec=60)
-                    
+                  
             # turn on compressor
             if cmd in ('heat', 'cool'):
                 if not self.pin_states['compressor']:
@@ -75,7 +77,7 @@ class realtime_interface():
             
         elif cmd == 'off':
             if self.pin_states['compressor']:
-                self.hardware_switch('compressor', 0)
+                self.hardware_switch('compressor', 10)
             if self.pin_states['fan']:
                 self.hardware_switch('fan', 0, sleep_sec = 0)
         
@@ -85,9 +87,11 @@ class realtime_interface():
         else:
             raise ValueError('unexpected command')
         
-        
+        print('pi state before: {0}'.format(self.state))
         if cmd != 0:
             self.state = cmd
+            self.info_dict['state'] = cmd
+        print('pi state after: {0}\n_____________________________'.format(self.state))
             
             
     def hardware_switch(self, name, signal, sleep_sec = 10):
@@ -95,9 +99,9 @@ class realtime_interface():
             if name in ('led', 'compressor', 'fan', 'switch'):
                 if signal == 1:
                     gpio_utils.gpio_on(self.pins[name])
-                else:
+                else: #signal is 0
                     gpio_utils.gpio_off(self.pins[name])
-                self.pin_states[name] = signal
+                self.pin_states[name] = signal #update pin states. 
             else:
                 raise ValueError('unexpected hardware name: {0}'.format(name))
         else:
@@ -158,7 +162,7 @@ class realtime_interface():
             gpio_utils.gpio_off(self.pins['led'])
         else:
             raise ValueError
-        self.pin_states['led'] = 1-current_state
+        self.pin_states['led'] = {1:0, 0:1}[current_state]
         
     def sleep(self, n):
         sleep(n)
