@@ -61,25 +61,25 @@ class realtime_interface():
             if cmd == 'heat':
                 #if the switch is not already on, turn it on. 
                 if not self.pin_states['switch']:
-                    self.hardware_switch('switch', 1, sleep_sec=60)
+                    self.hardware_switch('switch', 1, 60)
             else: #cmd == cool
                 # if the switch is on, turn it off!
                 if self.pin_states['switch']:
-                    self.hardware_switch('switch', 0, sleep_sec=60)
+                    self.hardware_switch('switch', 0, 60)
                   
             # turn on compressor
             if cmd in ('heat', 'cool'):
                 if not self.pin_states['compressor']:
-                    self.hardware_switch('compressor', 1)
+                    self.hardware_switch('compressor', 1, 10)
             # turn on fan
             if not self.pin_states['fan']:
-                self.hardware_switch('fan', 1, sleep_sec = 0)
+                self.hardware_switch('fan', 1, 0)
             
         elif cmd == 'off':
             if self.pin_states['compressor']:
-                self.hardware_switch('compressor', 10)
+                self.hardware_switch('compressor', 0, 10)
             if self.pin_states['fan']:
-                self.hardware_switch('fan', 0, sleep_sec = 0)
+                self.hardware_switch('fan', 0, 0)
         
         elif cmd == 0:
             True
@@ -93,7 +93,7 @@ class realtime_interface():
         #print('pi state after: {0}\n_____________________________'.format(self.info_dict['state']))
             
             
-    def hardware_switch(self, name, signal, sleep_sec = 10):
+    def hardware_switch(self, name, signal, sleep_sec):
         if signal in (0,1):
             if name in ('led', 'compressor', 'fan', 'switch'):
                 if signal == 1:
