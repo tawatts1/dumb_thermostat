@@ -41,9 +41,11 @@ def restart_wifi():
 if __name__ == '__main__':
     try:
         while True:
-            sleep(20)
+            sleep(10)
             if not get_network_status():
+                print('restarting wifi')
                 restart_wifi()
+            print('connected')
     except:
         with open("errors.txt", 'a') as file:
             file.write("\n===========================\n")
